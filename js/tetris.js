@@ -2,6 +2,7 @@
 const TETRIS_ROWS = 20;
 const TETRIS_COLS = TETRIS_ROWS/2;
 const START_STEP_INTERVAL = 50;
+const NUM_SHAPES = 2;
 
 
 function Stick(paper, cellSide, topCorner) {
@@ -24,6 +25,32 @@ function Stick(paper, cellSide, topCorner) {
     // Each shape needs to define its own rotate function
     this.rotate = function() {
 
+    }
+}
+
+function Square(paper, cellSide, topCorner) {
+
+    this.cells = new Array();
+    this.squares = new Array();
+    for (let i = 0; i < 2; i++) {
+        for (let j = 0; j < 2; j++) {
+            this.cells.push({x: i, y: j});
+            this.squares.push(
+                paper.Path.Rectangle({
+                    point: [topCorner.x+1 + (cellSide*i), topCorner.y+1 + (cellSide*j)],
+                    size: [cellSide-2, cellSide-2],
+                    radius: 1,
+                    strokeColor: 'black',
+                    fillColor: 'blue'
+                })
+            );
+        }
+    }
+
+    // Each shape needs to define its own rotate function
+    this.rotate = function() {
+        // do nothing!
+        return;
     }
 }
 
@@ -104,9 +131,10 @@ function Tetris(paper,winHeight) {
         return false;
     }
 
-    let shapes = new Array( Stick );
+    let shapes = new Array( Stick, Square );
     function shapeFactory() {
-        return new shapes[0](paper, cellSide, topCorner);
+        let index = Math.floor( Math.random() * NUM_SHAPES );
+        return new shapes[index](paper, cellSide, topCorner);
     }
 
     let gameOn = true;
