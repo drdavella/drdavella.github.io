@@ -1,114 +1,158 @@
-/*
- *
- */
 "use strict";
-const TETRIS_ROWS = 10;
+const TETRIS_ROWS = 20;
 const TETRIS_COLS = TETRIS_ROWS/2;
 const START_STEP_INTERVAL = 50;
 
 
+function Stick(paper, cellSide, topCorner) {
+
+    this.cells = new Array();
+    this.squares = new Array();
+    for (let i = 0; i < 4; i++) {
+        this.cells.push({x: i, y: 0});
+        this.squares.push(
+            paper.Path.Rectangle({
+                point: [topCorner.x+1 + (cellSide*i), topCorner.y+1],
+                size: [cellSide-2, cellSide-2],
+                radius: 1,
+                strokeColor: 'black',
+                fillColor: 'red'
+            })
+        );
+    }
+
+    // Each shape needs to define its own rotate function
+    this.rotate = function() {
+
+    }
+}
+
+
 function Tetris(paper,winHeight) {
 
-    var cellSide = Math.floor(winHeight*0.98 / TETRIS_ROWS);
-    var height = cellSide * TETRIS_ROWS;
-    var width = cellSide * TETRIS_COLS;
+    let cellSide = Math.floor(winHeight*0.98 / TETRIS_ROWS);
+    let height = cellSide * TETRIS_ROWS;
+    let width = cellSide * TETRIS_COLS;
     paper.view.setViewSize(width,height);
 
-    var topCorner = new paper.Point(0,0);
-    var bottomCorner = new paper.Point(width,height);
-    var border = new paper.Path.Rectangle(topCorner,bottomCorner);
+    let topCorner = new paper.Point(0,0);
+    let bottomCorner = new paper.Point(width,height);
+    let border = new paper.Path.Rectangle(topCorner,bottomCorner);
     border.center = paper.view.center;
     border.strokeColor = 'black';
 
-    var rightBoundary = width - cellSide/2 - 1;
-    var bottomBoundary = height - cellSide/2 - 1;
+    let rightBoundary = width - cellSide/2 - 1;
+    let bottomBoundary = height - cellSide/2 - 1;
 
-    var activeShape = null;
-    var tetrisMap = new Array();
-    var colMaxes = new Array();
-    // it's a little confusing that the top of the column is 0
-    for (var i = 0; i < TETRIS_COLS; i++) {
-        colMaxes.push(TETRIS_ROWS - 1);
+    let activeShape = null;
+    let tetrisMap = new Array();
+    let rowCounts = new Array();
+    for (let i = 0; i < TETRIS_ROWS; i++) {
+        rowCounts.push(0);
     }
 
     function getMapIndex(row,col) {
-        return (row * TETRIS_COLS) + col;
+        return (col * TETRIS_COLS) + row;
     }
 
     function isCellOccupied(row,col) {
         return (getMapIndex(row, col) in tetrisMap);
     }
 
-    var gameOn = true;
-    var stepInterval = START_STEP_INTERVAL;
-    var stepGame = function(event) {
+    function isValidMove(shape, xIncrement, yIncrement) {
+        for (let cell of shape.cells) {
+            if (isCellOccupied(cell.x+xIncrement, cell.y+yIncrement)) {
+                return false;
+            }
+            if (xIncrement < 0 && cell.x == 0) {
+                return false;
+            }
+            if (xIncrement > 0 && cell.x == TETRIS_COLS-1) {
+                return false;
+            }
+            if (cell.y == TETRIS_ROWS-1) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function moveShape(shape, xDirection, yDirection, cellSide) {
+        for (let square of shape.squares) {
+            square.position.x += (xDirection * cellSide);
+            square.position.y += (yDirection * cellSide);
+        }
+        for (let cell of shape.cells) {
+            cell.x += xDirection;
+            cell.y += yDirection;
+        }
+    }
+
+    function setCellsOccupied(cellList) {
+        for (let cell of cellList) {
+            tetrisMap[ getMapIndex(cell.x, cell.y) ] = true;
+            rowCounts[ cell.y ] += 1;
+        }
+    }
+
+    function isGameOver(cellList) {
+        for (let cell of cellList) {
+            if (cell.y == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    let shapes = new Array( Stick );
+    function shapeFactory() {
+        return new shapes[0](paper, cellSide, topCorner);
+    }
+
+    let gameOn = true;
+    let stepInterval = START_STEP_INTERVAL;
+    let stepGame = function(event) {
         if (activeShape != null) {
             if (event.count > 0 && event.count % stepInterval == 0) {
-                if (activeShape.row < TETRIS_ROWS-1
-                        && !isCellOccupied(activeShape.row+1, activeShape.col)) {
-                    activeShape.position.y += cellSide;
-                    activeShape.row += 1;
+                if (isValidMove(activeShape, 0, 1)) {
+                    moveShape(activeShape, 0, 1, cellSide);
                 }
                 else {
-
-                    tetrisMap[ getMapIndex(activeShape.row,activeShape.col) ] = true;
-                    if (activeShape.row == 0) {
+                    setCellsOccupied(activeShape.cells);
+                    if (isGameOver(activeShape.cells)) {
                         alert("GAME OVER!");
                         gameOn = false;
-                    }
-                    if (colMaxes[activeShape.col] > activeShape.row) {
-                        colMaxes[activeShape.col] = activeShape.row;
                     }
                     activeShape = null;
                 }
             }
         }
         else {
-            var square = new paper.Path.Rectangle({
-                point: [topCorner.x+1, topCorner.y+1],
-                size: [cellSide-2, cellSide-2],
-                radius: 1,
-                strokeColor: 'black',
-                fillColor: 'red'
-            });
-
-            activeShape = square;
-            // I think I hate javascript
-            activeShape.row = 0;
-            activeShape.col = 0;
+            activeShape = shapeFactory();
         }
     }
 
-    var handleKey = function(event) {
+    let handleKey = function(event) {
         if (activeShape) {
-            if (event.key == 'right'
-                    && activeShape.col < TETRIS_COLS-1
-                    && !isCellOccupied(activeShape.row, activeShape.col+1)) {
-                activeShape.position.x += cellSide;
-                activeShape.col += 1;
+            if (event.key == 'right' && isValidMove(activeShape, 1, 0)) {
+                moveShape(activeShape, 1, 0, cellSide);
                 return false;
             }
-            if (event.key == 'left'
-                    && activeShape.col > 0
-                    && !isCellOccupied(activeShape.row, activeShape.col-1)) {
-                activeShape.position.x -= cellSide;
-                activeShape.col -= 1;
+            if (event.key == 'left' && isValidMove(activeShape, -1, 0)) {
+                moveShape(activeShape, -1, 0, cellSide);
                 return false;
             }
             if (event.key == 'space') {
                 return false;
             }
-            if (event.key == 'down'
-                    && activeShape.row < TETRIS_ROWS-1
-                    && !isCellOccupied(activeShape.row+1, activeShape.col)) {
-                activeShape.position.y += cellSide;
-                activeShape.row += 1;
+            if (event.key == 'down' && isValidMove(activeShape, 0, 1)) {
+                moveShape(activeShape, 0, 1, cellSide);
                 return false;
             }
         }
     }
 
-    var tool = new paper.Tool();
+    let tool = new paper.Tool();
     paper.view.onFrame = function(event) {
         if (gameOn) {
             stepGame(event);
@@ -122,8 +166,8 @@ function Tetris(paper,winHeight) {
 
 
 window.onload = function(event) {
-    var canvas = document.getElementById('tetris');
+    let canvas = document.getElementById('tetris');
     paper.setup(canvas);
 
-    var game = new Tetris(paper,window.innerHeight);
+    let game = new Tetris(paper,window.innerHeight);
 }
