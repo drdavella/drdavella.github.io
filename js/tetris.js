@@ -22,9 +22,34 @@ function Stick(paper, cellSide, topCorner) {
         );
     }
 
+    // choose a center point for the rotation
+    let centerIdx = 2;
+    let center = this.cells[centerIdx];
+
     // Each shape needs to define its own rotate function
     this.rotate = function() {
+        for (let i = 0; i < this.cells.length; i++) {
+            if (i == centerIdx) {
+                continue;
+            }
 
+            let cell = this.cells[i];
+            let square = this.squares[i];
+
+            let xDiff = cell.x - center.x;
+            let yDiff = cell.y - center.y;
+
+            // Apply 90 degree rotation matrix
+            let xOffset = -1*yDiff;
+            let yOffset = xDiff;
+
+            cell.x = center.x + xOffset;
+            cell.y = center.y + yOffset;
+
+            square.position.x = topCorner.x + cellSide*cell.x + cellSide/2;
+            square.position.y = topCorner.y + cellSide*cell.y + cellSide/2;
+
+        }
     }
 }
 
@@ -171,6 +196,7 @@ function Tetris(paper,winHeight) {
                 return false;
             }
             if (event.key == 'space') {
+                activeShape.rotate();
                 return false;
             }
             if (event.key == 'down' && isValidMove(activeShape, 0, 1)) {
