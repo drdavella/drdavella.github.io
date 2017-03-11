@@ -123,31 +123,37 @@ function Tetris(paper,winHeight) {
 
     let activeShape = null;
     let tetrisMap = new Array();
-    let rowCounts = new Array();
+    let filledCellsPerRow = new Array();
     for (let i = 0; i < TETRIS_ROWS; i++) {
-        rowCounts.push(0);
+        filledCellsPerRow.push(0);
     }
 
     function getMapIndex(row,col) {
-        return (col * TETRIS_COLS) + row;
+        return ((col * TETRIS_ROWS) + row);
     }
 
     function isCellOccupied(row,col) {
-        return (getMapIndex(row, col) in tetrisMap);
+        let index = getMapIndex(row, col);
+        if (index in tetrisMap) {
+            if (tetrisMap[index] != null) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function isValidMove(shape, xIncrement, yIncrement) {
         for (let cell of shape.cells) {
-            if (isCellOccupied(cell.x+xIncrement, cell.y+yIncrement)) {
-                return false;
-            }
             if (xIncrement < 0 && cell.x == 0) {
                 return false;
             }
             if (xIncrement > 0 && cell.x == TETRIS_COLS-1) {
                 return false;
             }
-            if (cell.y == TETRIS_ROWS-1 && yIncrement != 0) {
+            if (yIncrement > 0 && cell.y == TETRIS_ROWS-1) {
+                return false;
+            }
+            if (isCellOccupied(cell.x+xIncrement, cell.y+yIncrement)) {
                 return false;
             }
         }
@@ -243,10 +249,48 @@ function Tetris(paper,winHeight) {
         }
     }
 
-    function setCellsOccupied(cellList) {
-        for (let cell of cellList) {
-            tetrisMap[ getMapIndex(cell.x, cell.y) ] = true;
-            rowCounts[ cell.y ] += 1;
+    function setCellsOccupied(activeShape) {
+        for (let i = 0; i < activeShape.cells.length; i++) {
+            let cell = activeShape.cells[i];
+            let square = activeShape.squares[i];
+            tetrisMap[ getMapIndex(cell.x, cell.y) ] = square;
+            filledCellsPerRow[ cell.y ] += 1;
+        }
+    }
+
+    function updateRows() {
+        let rowsToMove = new Array();
+        for (let i = 0; i < TETRIS_ROWS-1; i++) {
+            rowsToMove.push(0);
+        }
+
+        // check whether each row is full
+        for (let y = 0; y < TETRIS_ROWS; y++) {
+            if (filledCellsPerRow[y] == TETRIS_COLS) {
+                for (let x = 0; x < TETRIS_COLS; x++) {
+                    let index = getMapIndex(x ,y);
+                    tetrisMap[index].remove();
+                    tetrisMap[index] = null;
+                }
+                for (let yy = 0; yy < y; yy++) {
+                    rowsToMove[yy] += 1;
+                }
+                filledCellsPerRow[y] = 0;
+            }
+        }
+        for (let y = TETRIS_ROWS-2; y >= 0 ; y--) {
+            for (let x = 0; x < TETRIS_COLS; x++) {
+                let oldIndex = getMapIndex(x, y);
+                let square = tetrisMap[oldIndex];
+                if (rowsToMove[y] > 0 && square) {
+                    square.position.y += rowsToMove[y] * cellSide;
+                    tetrisMap[ getMapIndex(x, y+rowsToMove[y]) ] = square;
+                    filledCellsPerRow[y] -= 1;
+                    filledCellsPerRow[y+rowsToMove[y]] += 1;
+                    tetrisMap[oldIndex] = null;
+                    console.log(oldIndex);
+                }
+            }
         }
     }
 
@@ -275,11 +319,12 @@ function Tetris(paper,winHeight) {
                     moveShape(activeShape, 0, 1);
                 }
                 else {
-                    setCellsOccupied(activeShape.cells);
+                    setCellsOccupied(activeShape);
                     if (isGameOver(activeShape.cells)) {
                         alert("GAME OVER!");
                         gameOn = false;
                     }
+                    updateRows();
                     activeShape = null;
                 }
             }
