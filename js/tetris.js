@@ -18,7 +18,7 @@ function createSquare(x, y, cellSide, topCorner, color) {
 }
 
 
-function Stick(paper, cellSide, topCorner) {
+function Stick(paper, cellSide, topCorner, invert) {
 
     this.cells = new Array();
     this.squares = new Array();
@@ -33,21 +33,21 @@ function Stick(paper, cellSide, topCorner) {
     this.axis = this.cells[this.axisIdx];
 }
 
-function Square(paper, cellSide, topCorner) {
+function Square(paper, cellSide, topCorner, invert) {
 
     this.cells = new Array();
     this.squares = new Array();
     for (let i = 0; i < 2; i++) {
         for (let j = 0; j < 2; j++) {
             this.cells.push({x: i, y: j});
-            this.squares.push(createSquare(i, j, cellSide, topCorner, 'orange'));
+            this.squares.push(createSquare(i, j, cellSide, topCorner, 'orangered'));
         }
     }
 
     this.canRotate = false;
 }
 
-function TBone(paper, cellSide, topCorner) {
+function TBone(paper, cellSide, topCorner, invert) {
 
     this.cells = new Array();
     this.squares = new Array();
@@ -64,15 +64,20 @@ function TBone(paper, cellSide, topCorner) {
     this.axis = this.cells[this.axisIdx];
 }
 
-function Squiggle(paper, cellSide, topCorner) {
+function Squiggle(paper, cellSide, topCorner, invert) {
+
+    let color = invert ? 'lime' : 'navy';
 
     this.cells = new Array();
     this.squares = new Array();
+    let yOffset = 0;
     for (let i = 0; i < 2; i++) {
-        this.cells.push({x: 0, y: i});
-        this.squares.push(createSquare(0, i, cellSide, topCorner, 'lime'));
-        this.cells.push({x: 1, y: i+1});
-        this.squares.push(createSquare(1, i+1, cellSide, topCorner, 'lime'));
+        yOffset = (invert ? 1 : 0);
+        this.cells.push({x: 0, y: i + yOffset});
+        this.squares.push(createSquare(0, i + yOffset, cellSide, topCorner, color));
+        yOffset = (invert ? 0 : 1);
+        this.cells.push({x: 1, y: i + yOffset});
+        this.squares.push(createSquare(1, i + yOffset, cellSide, topCorner, color));
     }
 
     this.canRotate = true;
@@ -80,16 +85,19 @@ function Squiggle(paper, cellSide, topCorner) {
     this.axis = this.cells[this.axisIdx];
 }
 
-function BendyGuy(paper, cellSide, topCorner) {
+function BendyGuy(paper, cellSide, topCorner, invert) {
+
+    let color = invert ? 'darkgreen' : 'purple';
+    let bend = invert ? -1 : 1;
 
     this.cells = new Array();
     this.squares = new Array();
     for (let i = 0; i < 3; i++) {
         this.cells.push({x: 0, y: i});
-        this.squares.push(createSquare(0, i, cellSide, topCorner, 'purple'));
+        this.squares.push(createSquare(0, i, cellSide, topCorner, color));
     }
-    this.cells.push({x: 1, y: 0});
-    this.squares.push(createSquare(1, 0, cellSide, topCorner, 'purple'));
+    this.cells.push({x: bend, y: 0});
+    this.squares.push(createSquare(bend, 0, cellSide, topCorner, color));
 
     this.canRotate = true;
     this.axisIdx = 0;
@@ -249,7 +257,8 @@ function Tetris(paper,winHeight) {
     let shapes = new Array( Stick, Square, TBone, Squiggle, BendyGuy);
     function shapeFactory() {
         let index = Math.floor( Math.random() * shapes.length );
-        return new shapes[index](paper, cellSide, topCorner);
+        let invert = Math.floor( Math.random() * 2 );
+        return new shapes[index](paper, cellSide, topCorner, (invert == 1));
     }
 
     let gameOn = true;
