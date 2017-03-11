@@ -210,11 +210,14 @@ function Tetris(paper,winHeight) {
             return;
         }
 
-        let nc = getRotatedCells(shape);
+        let rotated = getRotatedCells(shape);
+        let newCells = rotated.newCells;
+        let xAdjust = rotated.xAdjust;
+        let yAdjust = rotated.yAdjust;
 
         // make sure this move is valid
-        for (let cell of nc.newCells) {
-            if (isCellOccupied(cell.x+nc.xAdjust, cell.y+nc.yAdjust)) {
+        for (let cell of rotated.newCells) {
+            if (isCellOccupied(cell.x+xAdjust, cell.y+yAdjust)) {
                 return;
             }
         }
@@ -223,13 +226,15 @@ function Tetris(paper,winHeight) {
         for (let i = 0; i < shape.cells.length; i++) {
             let square = shape.squares[i];
 
+            // we still need to account for adjustments to the axis, even
+            // thought it doesn't rotate
             if (i == shape.axisIdx) {
-                shape.cells[i].x += nc.xAdjust;
-                shape.cells[i].y += nc.yAdjust;
+                shape.cells[i].x += xAdjust;
+                shape.cells[i].y += yAdjust;
             }
             else {
-                shape.cells[i].x = nc.newCells[j].x + nc.xAdjust;
-                shape.cells[i].y = nc.newCells[j].y + nc.yAdjust;
+                shape.cells[i].x = newCells[j].x + xAdjust;
+                shape.cells[i].y = newCells[j].y + yAdjust;
                 j++;
             }
 
