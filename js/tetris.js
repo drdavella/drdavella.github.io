@@ -147,7 +147,7 @@ function Tetris(paper,winHeight) {
             if (xIncrement > 0 && cell.x == TETRIS_COLS-1) {
                 return false;
             }
-            if (cell.y == TETRIS_ROWS-1) {
+            if (cell.y == TETRIS_ROWS-1 && yIncrement != 0) {
                 return false;
             }
         }
