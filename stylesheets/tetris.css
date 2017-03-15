@@ -1,7 +1,43 @@
-canvas {
+#title {
+    float: left;
+    width: 20%;
+}
+
+#scoreboard {
+    position: absolute;
+    top: 20%;
+    left: 1%;
+    width: 20%;
+    height: 30%;
+    display: block;
+}
+
+#next-shape {
+    position: absolute;
+    top: 20%;
+    right: 1%;
+    width: 20%;
+    height: 30%;
+    display: block;
+}
+
+#canvas-container {
+    width: 60%;
+    position: relative;
     padding-left: 0;
     padding-right: 0;
-    margin-left: auto;
-    margin-right: auto;
+    margin: auto;
+    display: block;
+}
+
+#tetris {
+    position: relative;
+    padding-left: 0;
+    padding-right: 0;
+    margin: auto;
+    display: block;
+}
+
+#main {
     display: block;
 }
