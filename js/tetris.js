@@ -24,7 +24,7 @@ function Stick(paper, cellSide, topCorner, invert) {
     this.squares = new Array();
     for (let i = 0; i < 4; i++) {
         this.cells.push({x: i, y: 0});
-        this.squares.push(createSquare(i, 0, cellSide, topCorner, 'red'));
+        this.squares.push(createSquare(i, 0, cellSide, topCorner, 'cyan'));
     }
 
     // choose a center point for the rotation
@@ -40,7 +40,7 @@ function Square(paper, cellSide, topCorner, invert) {
     for (let i = 0; i < 2; i++) {
         for (let j = 0; j < 2; j++) {
             this.cells.push({x: i, y: j});
-            this.squares.push(createSquare(i, j, cellSide, topCorner, 'orangered'));
+            this.squares.push(createSquare(i, j, cellSide, topCorner, 'yellow'));
         }
     }
 
@@ -87,7 +87,7 @@ function Squiggle(paper, cellSide, topCorner, invert) {
 
 function BendyGuy(paper, cellSide, topCorner, invert) {
 
-    let color = invert ? 'darkgreen' : 'purple';
+    let color = invert ? 'red' : 'purple';
     let bend = invert ? -1 : 1;
 
     this.cells = new Array();
