@@ -16,10 +16,25 @@
 
 <body>
     <div id="main">
-        <div id="title"><h1 align="center">Tetris!</h1></div>
-        <div id="scoreboard"><h3 align="center">Score:</h3></div>
+        <div id="title">
+            <h1 align="center">Tetris!</h1>
+        </div>
+        <div id="scoreboard">
+            <table align="center">
+                <tr>
+                    <td>Level:</td>
+                    <td id="level"></td>
+                </tr>
+                <tr>
+                    <td>Score:</td>
+                    <td id="score"></td>
+                </tr>
+            </table>
+        </div>
         <div id="canvas-container"><canvas id="tetris" resize="true"></canvas></div>
-        <div id="next-shape"><h3 align>Next Shape:</h3></div>
+        <div id="next-shape">
+            <h3 align>Next Shape:</h3>
+        </div>
     </div>
 </body>
 </html>

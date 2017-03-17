@@ -1,7 +1,7 @@
 "use strict";
 const TETRIS_ROWS = 24;
 const TETRIS_COLS = TETRIS_ROWS/2;
-const START_STEP_INTERVAL = 50;
+const START_STEP_INTERVAL = 25;
 
 
 function createSquare(x, y, cellSide, topCorner, color) {
@@ -258,6 +258,15 @@ function Tetris(paper,winHeight) {
         }
     }
 
+    let totalScore = 0;
+    let lastScore = 0;
+    let scoreElement = document.getElementById('score');
+    scoreElement.textContent = totalScore;
+
+    function updateScore(score) {
+        scoreElement.textContent = score;
+    }
+
     function updateRows() {
         let rowsToMove = new Array();
         for (let i = 0; i < TETRIS_ROWS-1; i++) {
@@ -276,6 +285,7 @@ function Tetris(paper,winHeight) {
                     rowsToMove[yy] += 1;
                 }
                 filledCellsPerRow[y] = 0;
+                totalScore += TETRIS_COLS*10;
             }
         }
         for (let y = TETRIS_ROWS-2; y >= 0 ; y--) {
@@ -288,10 +298,11 @@ function Tetris(paper,winHeight) {
                     filledCellsPerRow[y] -= 1;
                     filledCellsPerRow[y+rowsToMove[y]] += 1;
                     tetrisMap[oldIndex] = null;
-                    console.log(oldIndex);
                 }
             }
         }
+
+        updateScore(totalScore);
     }
 
     function isGameOver(cellList) {
