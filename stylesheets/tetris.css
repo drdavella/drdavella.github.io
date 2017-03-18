@@ -30,8 +30,16 @@
     display: block;
 }
 
-#tetris {
+#tetris-canvas {
     position: relative;
+    padding-left: 0;
+    padding-right: 0;
+    margin: auto;
+    display: block;
+}
+
+#next-shape-canvas {
+    position: absolute;
     padding-left: 0;
     padding-right: 0;
     margin: auto;

@@ -3,8 +3,11 @@ const TETRIS_ROWS = 24;
 const TETRIS_COLS = TETRIS_ROWS/2;
 const START_STEP_INTERVAL = 25;
 
+const TETRIS_CANVAS_ID = "tetris-canvas"
+const NEXTSHP_CANVAS_ID = "next-shape-canvas"
 
-function createSquare(x, y, cellSide, topCorner, color) {
+
+function createSquare(paper, x, y, cellSide, topCorner, color) {
 
     let square = new paper.Path.Rectangle({
         point: [topCorner.x+1 + (cellSide*x), topCorner.y+1 + (cellSide*y)],
@@ -24,7 +27,7 @@ function Stick(paper, cellSide, topCorner, invert) {
     this.squares = new Array();
     for (let i = 0; i < 4; i++) {
         this.cells.push({x: i, y: 0});
-        this.squares.push(createSquare(i, 0, cellSide, topCorner, 'cyan'));
+        this.squares.push(createSquare(paper, i, 0, cellSide, topCorner, 'cyan'));
     }
 
     // choose a center point for the rotation
@@ -40,7 +43,7 @@ function Square(paper, cellSide, topCorner, invert) {
     for (let i = 0; i < 2; i++) {
         for (let j = 0; j < 2; j++) {
             this.cells.push({x: i, y: j});
-            this.squares.push(createSquare(i, j, cellSide, topCorner, 'yellow'));
+            this.squares.push(createSquare(paper, i, j, cellSide, topCorner, 'yellow'));
         }
     }
 
@@ -53,10 +56,10 @@ function TBone(paper, cellSide, topCorner, invert) {
     this.squares = new Array();
     for (let i = 0; i < 3; i++) {
         this.cells.push({x: i, y: 0});
-        this.squares.push(createSquare(i, 0, cellSide, topCorner, 'teal'));
+        this.squares.push(createSquare(paper, i, 0, cellSide, topCorner, 'teal'));
     }
     this.cells.push({x: 1, y: 1});
-    this.squares.push(createSquare(1, 1, cellSide, topCorner, 'teal'));
+    this.squares.push(createSquare(paper, 1, 1, cellSide, topCorner, 'teal'));
 
     // choose a center point for the rotation
     this.canRotate = true;
@@ -74,10 +77,10 @@ function Squiggle(paper, cellSide, topCorner, invert) {
     for (let i = 0; i < 2; i++) {
         yOffset = (invert ? 1 : 0);
         this.cells.push({x: 0, y: i + yOffset});
-        this.squares.push(createSquare(0, i + yOffset, cellSide, topCorner, color));
+        this.squares.push(createSquare(paper, 0, i + yOffset, cellSide, topCorner, color));
         yOffset = (invert ? 0 : 1);
         this.cells.push({x: 1, y: i + yOffset});
-        this.squares.push(createSquare(1, i + yOffset, cellSide, topCorner, color));
+        this.squares.push(createSquare(paper, 1, i + yOffset, cellSide, topCorner, color));
     }
 
     this.canRotate = true;
@@ -94,10 +97,10 @@ function BendyGuy(paper, cellSide, topCorner, invert) {
     this.squares = new Array();
     for (let i = 0; i < 3; i++) {
         this.cells.push({x: 0, y: i});
-        this.squares.push(createSquare(0, i, cellSide, topCorner, color));
+        this.squares.push(createSquare(paper, 0, i, cellSide, topCorner, color));
     }
     this.cells.push({x: bend, y: 0});
-    this.squares.push(createSquare(bend, 0, cellSide, topCorner, color));
+    this.squares.push(createSquare(paper, bend, 0, cellSide, topCorner, color));
 
     this.canRotate = true;
     this.axisIdx = 0;
@@ -105,24 +108,42 @@ function BendyGuy(paper, cellSide, topCorner, invert) {
 }
 
 
-function Tetris(paper,winHeight) {
+function Tetris(winHeight) {
 
+    /* Set up our canvases */
+    let mainPaper = new paper.PaperScope();
+    mainPaper.setup(document.getElementById(TETRIS_CANVAS_ID));
+    let nextPaper = new paper.PaperScope();
+    nextPaper.setup(document.getElementById(NEXTSHP_CANVAS_ID));
+    nextPaper.view.setViewSize(100,100);
+
+    /* Keep the main paper canvas active until we need to update the other one */
+    mainPaper.activate();
+
+    /* Compute size of the main game's canvas */
     let cellSide = Math.floor(winHeight*0.98 / TETRIS_ROWS);
     let height = cellSide * TETRIS_ROWS;
     let width = cellSide * TETRIS_COLS;
-    paper.view.setViewSize(width,height);
+    mainPaper.view.setViewSize(width,height);
 
-    let topCorner = new paper.Point(0,0);
-    let bottomCorner = new paper.Point(width,height);
-    let border = new paper.Path.Rectangle(topCorner,bottomCorner);
-    border.center = paper.view.center;
+    /* Important parameters that we use to determine where shapes get drawn */
+    let topCorner = new mainPaper.Point(0,0);
+    let bottomCorner = new mainPaper.Point(width,height);
+    let border = new mainPaper.Path.Rectangle(topCorner,bottomCorner);
+    border.center = mainPaper.view.center;
     border.strokeColor = 'black';
 
-    let rightBoundary = width - cellSide/2 - 1;
-    let bottomBoundary = height - cellSide/2 - 1;
-
+    /* Represents the shape that is currently active on the board */
     let activeShape = null;
+    let activeShapeParams = null;
+    /* This is the next shape to be drawn (shown in side window) */
+    let nextShape = null;
+    let nextShapeParams = null;
+
+    /* Associative array to represent all non-active filled squares on the board */
     let tetrisMap = new Array();
+
+    /* A per-row tally of how many cells are filled */
     let filledCellsPerRow = new Array();
     for (let i = 0; i < TETRIS_ROWS; i++) {
         filledCellsPerRow.push(0);
@@ -314,11 +335,17 @@ function Tetris(paper,winHeight) {
         return false;
     }
 
-    let shapes = new Array( Stick, Square, TBone, Squiggle, BendyGuy);
-    function shapeFactory() {
+    let shapes = new Array(Stick, Square, TBone, Squiggle, BendyGuy);
+    function getShapeParams() {
         let index = Math.floor( Math.random() * shapes.length );
         let invert = Math.floor( Math.random() * 2 );
-        return new shapes[index](paper, cellSide, topCorner, (invert == 1));
+        return {index: index, invert: invert};
+    }
+
+    function drawShape(paper, shapeParams) {
+        let index = shapeParams.index;
+        let invert = shapeParams.invert;
+        return new shapes[index](mainPaper, cellSide, topCorner, (invert == 1));
     }
 
     let gameOn = true;
@@ -341,7 +368,24 @@ function Tetris(paper,winHeight) {
             }
         }
         else {
-            activeShape = shapeFactory();
+            /* This should only happen the first time around */
+            if (nextShape == null) {
+                nextShapeParams = getShapeParams();
+            }
+            else {
+                for (let square of nextShape.squares) {
+                    square.remove();
+                }
+            }
+
+            activeShapeParams = nextShapeParams;
+            nextShapeParams = getShapeParams();
+
+            nextPaper.activate();
+            nextShape = drawShape(nextPaper, nextShapeParams);
+
+            mainPaper.activate();
+            activeShape = drawShape(mainPaper, activeShapeParams);
         }
     }
 
@@ -366,8 +410,8 @@ function Tetris(paper,winHeight) {
         }
     }
 
-    let tool = new paper.Tool();
-    paper.view.onFrame = function(event) {
+    let tool = new mainPaper.Tool();
+    mainPaper.view.onFrame = function(event) {
         if (gameOn) {
             stepGame(event);
         }
@@ -380,8 +424,5 @@ function Tetris(paper,winHeight) {
 
 
 window.onload = function(event) {
-    let canvas = document.getElementById('tetris');
-    paper.setup(canvas);
-
-    let game = new Tetris(paper,window.innerHeight);
+    let game = new Tetris(window.innerHeight);
 }
