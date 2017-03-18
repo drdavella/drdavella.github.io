@@ -21,13 +21,15 @@ function createSquare(paper, x, y, cellSide, topCorner, color) {
 }
 
 
-function Stick(paper, cellSide, topCorner, invert) {
+function Stick(paper, cellSide, topCorner, xStart, invert) {
 
+    xStart = Math.max(xStart - 2, 0);
     this.cells = new Array();
     this.squares = new Array();
-    for (let i = 0; i < 4; i++) {
+    for (let i = xStart; i < xStart+4; i++) {
         this.cells.push({x: i, y: 0});
-        this.squares.push(createSquare(paper, i, 0, cellSide, topCorner, 'cyan'));
+        this.squares.push(
+                createSquare(paper, i, 0, cellSide, topCorner, 'cyan'));
     }
 
     // choose a center point for the rotation
@@ -36,30 +38,35 @@ function Stick(paper, cellSide, topCorner, invert) {
     this.axis = this.cells[this.axisIdx];
 }
 
-function Square(paper, cellSide, topCorner, invert) {
+function Square(paper, cellSide, topCorner, xStart, invert) {
 
+    xStart = xStart - 1;
     this.cells = new Array();
     this.squares = new Array();
-    for (let i = 0; i < 2; i++) {
+    for (let i = xStart; i < xStart+2; i++) {
         for (let j = 0; j < 2; j++) {
             this.cells.push({x: i, y: j});
-            this.squares.push(createSquare(paper, i, j, cellSide, topCorner, 'yellow'));
+            this.squares.push(
+                    createSquare(paper, i, j, cellSide, topCorner, 'yellow'));
         }
     }
 
     this.canRotate = false;
 }
 
-function TBone(paper, cellSide, topCorner, invert) {
+function TBone(paper, cellSide, topCorner, xStart, invert) {
 
+    xStart = Math.max(xStart - 2, 0);
     this.cells = new Array();
     this.squares = new Array();
-    for (let i = 0; i < 3; i++) {
+    for (let i = xStart; i < xStart+3; i++) {
         this.cells.push({x: i, y: 0});
-        this.squares.push(createSquare(paper, i, 0, cellSide, topCorner, 'teal'));
+        this.squares.push(
+                createSquare(paper, i, 0, cellSide, topCorner, 'teal'));
     }
-    this.cells.push({x: 1, y: 1});
-    this.squares.push(createSquare(paper, 1, 1, cellSide, topCorner, 'teal'));
+    this.cells.push({x: xStart+1, y: 1});
+    this.squares.push(
+            createSquare(paper, xStart+1, 1, cellSide, topCorner, 'teal'));
 
     // choose a center point for the rotation
     this.canRotate = true;
@@ -67,8 +74,9 @@ function TBone(paper, cellSide, topCorner, invert) {
     this.axis = this.cells[this.axisIdx];
 }
 
-function Squiggle(paper, cellSide, topCorner, invert) {
+function Squiggle(paper, cellSide, topCorner, xStart, invert) {
 
+    xStart = xStart - 1;
     let color = invert ? 'lime' : 'navy';
 
     this.cells = new Array();
@@ -76,11 +84,25 @@ function Squiggle(paper, cellSide, topCorner, invert) {
     let yOffset = 0;
     for (let i = 0; i < 2; i++) {
         yOffset = (invert ? 1 : 0);
-        this.cells.push({x: 0, y: i + yOffset});
-        this.squares.push(createSquare(paper, 0, i + yOffset, cellSide, topCorner, color));
+        this.cells.push({x: xStart, y: i + yOffset});
+        this.squares.push(
+                createSquare(
+                    paper,
+                    xStart,
+                    i+yOffset,
+                    cellSide,
+                    topCorner,
+                    color));
         yOffset = (invert ? 0 : 1);
-        this.cells.push({x: 1, y: i + yOffset});
-        this.squares.push(createSquare(paper, 1, i + yOffset, cellSide, topCorner, color));
+        this.cells.push({x: xStart+1, y: i + yOffset});
+        this.squares.push(
+                createSquare(
+                    paper,
+                    xStart+1,
+                    i+yOffset,
+                    cellSide,
+                    topCorner,
+                    color));
     }
 
     this.canRotate = true;
@@ -88,16 +110,17 @@ function Squiggle(paper, cellSide, topCorner, invert) {
     this.axis = this.cells[this.axisIdx];
 }
 
-function BendyGuy(paper, cellSide, topCorner, invert) {
+function BendyGuy(paper, cellSide, topCorner, xStart, invert) {
 
     let color = invert ? 'red' : 'purple';
-    let bend = invert ? -1 : 1;
+    let bend = xStart + (invert ? -1 : 1);
 
     this.cells = new Array();
     this.squares = new Array();
     for (let i = 0; i < 3; i++) {
-        this.cells.push({x: 0, y: i});
-        this.squares.push(createSquare(paper, 0, i, cellSide, topCorner, color));
+        this.cells.push({x: xStart, y: i});
+        this.squares.push(
+                createSquare(paper, xStart, i, cellSide, topCorner, color));
     }
     this.cells.push({x: bend, y: 0});
     this.squares.push(createSquare(paper, bend, 0, cellSide, topCorner, color));
@@ -265,8 +288,10 @@ function Tetris(winHeight) {
                 j++;
             }
 
-            square.position.x = topCorner.x + cellSide*shape.cells[i].x + cellSide/2;
-            square.position.y = topCorner.y + cellSide*shape.cells[i].y + cellSide/2;
+            square.position.x =
+                        topCorner.x + cellSide*shape.cells[i].x + cellSide/2;
+            square.position.y =
+                        topCorner.y + cellSide*shape.cells[i].y + cellSide/2;
         }
     }
 
@@ -342,10 +367,15 @@ function Tetris(winHeight) {
         return {index: index, invert: invert};
     }
 
-    function drawShape(paper, shapeParams) {
+    function drawShape(paper, shapeParams, xStart) {
         let index = shapeParams.index;
         let invert = shapeParams.invert;
-        return new shapes[index](mainPaper, cellSide, topCorner, (invert == 1));
+        return new shapes[index](
+                            mainPaper,
+                            cellSide,
+                            topCorner,
+                            xStart,
+                            (invert == 1));
     }
 
     let gameOn = true;
@@ -382,10 +412,11 @@ function Tetris(winHeight) {
             nextShapeParams = getShapeParams();
 
             nextPaper.activate();
-            nextShape = drawShape(nextPaper, nextShapeParams);
+            nextShape = drawShape(nextPaper, nextShapeParams, 1);
 
+            let xStart = Math.floor(TETRIS_COLS/2);
             mainPaper.activate();
-            activeShape = drawShape(mainPaper, activeShapeParams);
+            activeShape = drawShape(mainPaper, activeShapeParams, xStart);
         }
     }
 
