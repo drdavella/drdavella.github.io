@@ -1,7 +1,9 @@
 "use strict";
 const TETRIS_ROWS = 24;
 const TETRIS_COLS = TETRIS_ROWS/2;
-const START_STEP_INTERVAL = 25;
+const START_STEP_INTERVAL = 40;
+const STEP_SCALE_FACTOR = 0.90;
+const SCORE_DIVISOR = 750;
 
 const TETRIS_CANVAS_ID = "tetris-canvas"
 const NEXTSHP_CANVAS_ID = "next-shape-canvas"
@@ -309,6 +311,11 @@ function Tetris(winHeight) {
     let scoreElement = document.getElementById('score');
     scoreElement.textContent = totalScore;
 
+    let level = 1;
+    let stepInterval = START_STEP_INTERVAL;
+    let levelElement = document.getElementById('level');
+    levelElement.textContent = level;
+
     function updateScore(rowsCleared) {
         /* Do nothing if no rows were actually cleared */
         if (rowsCleared == 0) {
@@ -339,6 +346,17 @@ function Tetris(winHeight) {
         }
 
         scoreElement.textContent = totalScore;
+    }
+
+    function updateLevel() {
+        /* Let our level grow logarithmically */
+        let newLevel = 1 + Math.floor(Math.log(1 + totalScore/SCORE_DIVISOR));
+        if (newLevel > level) {
+            level = newLevel;
+            levelElement.textContent = newLevel;
+            /* Decrease the step interval */
+            stepInterval = Math.floor(stepInterval * STEP_SCALE_FACTOR);
+        }
     }
 
     function updateRows() {
@@ -378,6 +396,7 @@ function Tetris(winHeight) {
         }
 
         updateScore(rowsCleared);
+        updateLevel();
     }
 
     function isGameOver(cellList) {
@@ -408,7 +427,6 @@ function Tetris(winHeight) {
     }
 
     let gameOn = true;
-    let stepInterval = START_STEP_INTERVAL;
     let stepGame = function(event) {
         if (activeShape != null) {
             if (event.count > 0 && event.count % stepInterval == 0) {
