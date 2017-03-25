@@ -309,11 +309,40 @@ function Tetris(winHeight) {
     let scoreElement = document.getElementById('score');
     scoreElement.textContent = totalScore;
 
-    function updateScore(score) {
-        scoreElement.textContent = score;
+    function updateScore(rowsCleared) {
+        /* Do nothing if no rows were actually cleared */
+        if (rowsCleared == 0) {
+            return;
+        }
+
+        let thisScore = 10 * TETRIS_ROWS * rowsCleared;
+        totalScore += thisScore + Math.floor(lastScore * 0.5);
+
+        /* This is called a tetris */
+        if (rowsCleared == 4) {
+            totalScore += thisScore + lastScore;
+            lastScore = thisScore;
+        }
+        /* Slightly larger bonus for clearing 3 rows */
+        else if (rowsCleared == 2) {
+            totalScore += thisScore + Math.floor(lastScore * 0.5);
+            lastScore = thisScore;
+        }
+        /* Small bonus for clearing 2 rows */
+        else if (rowsCleared == 2) {
+            totalScore += thisScore + Math.floor(lastScore * 0.25);
+            lastScore  = thisScore;
+        }
+        else {
+            totalScore += thisScore;
+            lastScore = 0;
+        }
+
+        scoreElement.textContent = totalScore;
     }
 
     function updateRows() {
+        let rowsCleared = 0;
         let rowsToMove = new Array();
         for (let i = 0; i < TETRIS_ROWS-1; i++) {
             rowsToMove.push(0);
@@ -331,7 +360,7 @@ function Tetris(winHeight) {
                     rowsToMove[yy] += 1;
                 }
                 filledCellsPerRow[y] = 0;
-                totalScore += TETRIS_COLS*10;
+                rowsCleared += 1;
             }
         }
         for (let y = TETRIS_ROWS-2; y >= 0 ; y--) {
@@ -348,7 +377,7 @@ function Tetris(winHeight) {
             }
         }
 
-        updateScore(totalScore);
+        updateScore(rowsCleared);
     }
 
     function isGameOver(cellList) {
