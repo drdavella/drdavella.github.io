@@ -297,6 +297,23 @@ function Tetris(winHeight) {
         }
     }
 
+    function dropShape(shape) {
+        let maxDrop = TETRIS_ROWS;
+        for (let cell of shape.cells) {
+            for (let row = cell.y+1; row < TETRIS_ROWS; row++) {
+                let distance = TETRIS_ROWS - cell.y - 1;
+                if (isCellOccupied(cell.x, row)) {
+                    distance = row - cell.y - 1;
+                }
+                if (distance < maxDrop) {
+                    maxDrop = distance;
+                }
+            }
+        }
+
+        moveShape(shape, 0, maxDrop);
+    }
+
     function setCellsOccupied(activeShape) {
         for (let i = 0; i < activeShape.cells.length; i++) {
             let cell = activeShape.cells[i];
@@ -366,7 +383,7 @@ function Tetris(winHeight) {
             rowsToMove.push(0);
         }
 
-        // check whether each row is full
+        /* check whether each row is full */
         for (let y = 0; y < TETRIS_ROWS; y++) {
             if (filledCellsPerRow[y] == TETRIS_COLS) {
                 for (let x = 0; x < TETRIS_COLS; x++) {
@@ -381,6 +398,13 @@ function Tetris(winHeight) {
                 rowsCleared += 1;
             }
         }
+
+        /* Nothing more to do if no rows were cleared */
+        if (rowsCleared == 0) {
+            return;
+        }
+
+        /* Move all the squares in rows that have been eliminated */
         for (let y = TETRIS_ROWS-2; y >= 0 ; y--) {
             for (let x = 0; x < TETRIS_COLS; x++) {
                 let oldIndex = getMapIndex(x, y);
@@ -477,12 +501,16 @@ function Tetris(winHeight) {
                 moveShape(activeShape, -1, 0);
                 return false;
             }
-            if (event.key == 'space') {
+            if (event.key == 'up') {
                 rotateShape(activeShape);
                 return false;
             }
             if (event.key == 'down' && isValidMove(activeShape, 0, 1)) {
                 moveShape(activeShape, 0, 1);
+                return false;
+            }
+            if (event.key == 'space') {
+                dropShape(activeShape);
                 return false;
             }
         }
