@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>first post on Dan D&#39;Avella</title>
+    <link>https://drdavella.github.io/categories/first-post/</link>
+    <description>Recent content in first post on Dan D&#39;Avella</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 01 Nov 2017 20:54:27 -0400</lastBuildDate>
+    <atom:link href="https://drdavella.github.io/categories/first-post/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>first post</title>
+      <link>https://drdavella.github.io/blog/first-post/</link>
+      <pubDate>Wed, 01 Nov 2017 20:54:27 -0400</pubDate>
+      
+      <guid>https://drdavella.github.io/blog/first-post/</guid>
+      <description>&lt;p&gt;Hi! My name is Dan. I sometimes play the banjo. Setting up a website has been a
+personal goal for a while now. So here it is! If you&amp;rsquo;re lucky, I&amp;rsquo;ll post a
+banjo video.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
